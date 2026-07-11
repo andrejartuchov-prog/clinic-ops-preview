@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Family Med Center — owner's dashboard (preview)</title>
+<meta name="description" content="Working preview of an owner's dashboard for a multi-branch family clinic. All data is synthetic.">
+<style>
+:root{--bg:#F7F8FA;--card:#FFFFFF;--ink:#1D2939;--muted:#667085;--line:#EAECF0;
+--teal:#0E9384;--teal-ink:#0B7568;--teal-soft:#E0F2EF;--alarm:#D92D20;--up:#12B76A;--up-ink:#067647;
+--amber-bg:#FEF0C7;--amber-line:#FEDF89;--amber-ink:#93370D;
+--shadow:0 1px 3px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.04);
+--shadow-hover:0 4px 12px rgba(16,24,40,.10)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#F7F8FA linear-gradient(180deg,#F7F8FA,#EEF2F6);background-attachment:fixed;
+color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+.nowrap{white-space:nowrap}
+.muted{color:var(--muted)}
+a{color:var(--teal-ink)}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:18px;margin:0 0 12px}
+h3{font-size:14px;margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.card:hover{box-shadow:var(--shadow-hover)}
+.card,.tabs button,.langs button,.lm-item,.lm-copy,.lm-more,select[data-branch-select],.next-cta a,a{
+transition:background-color .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:18px;padding:10px 22px;
+background:var(--card);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--ink)}
+.brand-chip{width:28px;height:28px;border-radius:8px;background:var(--teal);display:inline-flex;
+align-items:center;justify-content:center;flex:none}
+.tabs{display:flex;gap:4px;flex:1}
+.tabs button{border:0;background:none;font:inherit;color:var(--muted);padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap}
+.tabs button.active{background:var(--teal-soft);color:var(--teal-ink);font-weight:600}
+.langs{display:flex;gap:6px}
+.langs button{border:1px solid var(--line);background:none;font:inherit;color:var(--muted);
+padding:4px 10px;border-radius:8px;cursor:pointer}
+.langs button.active{background:var(--teal-ink);border-color:var(--teal-ink);color:#fff}
+main{max-width:1180px;margin:0 auto;padding:20px 22px 60px}
+[data-screen]{display:none}
+[data-screen].active{display:block}
+.block{padding:18px 20px;margin-bottom:18px}
+.sc-head{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 20px;margin-bottom:12px;flex-wrap:wrap}
+.sc-date{color:var(--muted);margin-top:4px}
+select[data-branch-select]{font:inherit;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.src-note{margin:0 2px 16px;color:var(--muted);font-size:13.5px}
+.src-note a{margin-left:6px;text-decoration:none;font-weight:600}
+.src-note .sn-demo{display:block;margin-top:2px;font-size:12.5px}
+.sc-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);gap:18px;align-items:start}
+.kpi-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.kpi-card{border:1px solid var(--line);border-radius:12px;padding:14px 14px 12px;min-width:0}
+.kpi-label{font-size:12.5px;color:var(--muted)}
+.kpi-value{font-size:26px;font-weight:700;letter-spacing:-.01em;margin-top:2px}
+.kpi-sub{font-size:12px;color:var(--muted)}
+.kpi-delta{font-size:12.5px;margin-top:4px;color:var(--muted)}
+.kpi-delta.up{color:var(--up-ink)}
+.kpi-delta.down{color:var(--muted)}
+.kpi-delta.alarm{color:var(--alarm);font-weight:600}
+.spark{width:100%;height:34px;margin-top:6px}
+.spark polyline{fill:none;stroke:var(--teal);stroke-width:2.5}
+.spark-label{font-size:12px;color:var(--muted)}
+.freshness{margin-top:12px;font-size:12px;color:var(--muted);text-align:right}
+.fn-row{display:flex;gap:14px;align-items:stretch}
+.fn-step{flex:1;min-width:0}
+.fn-label{font-size:12.5px;color:var(--muted)}
+.fn-value{font-size:19px;font-weight:700;margin:2px 0 6px}
+.fn-bar{background:var(--teal-soft);border-radius:6px;height:10px;overflow:hidden}
+.fn-bar i{display:block;height:100%;background:var(--teal);border-radius:6px}
+.fn-conv{font-size:12px;margin-top:6px;color:var(--teal-ink);font-weight:600}
+.br-row{display:grid;grid-template-columns:150px 1fr 90px;gap:14px;align-items:center;
+padding:10px 8px;border-radius:10px}
+.br-row[data-highlight="true"]{background:var(--teal-soft)}
+.br-name{font-weight:600;font-size:13.5px}
+.br-cells{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.br-cell b{font-size:15px;display:block}
+.br-cell span{font-size:12px;display:block}
+.br-cell.best b{color:var(--teal-ink)}
+.br-bar{background:var(--teal-soft);border-radius:6px;height:8px}
+.br-bar i{display:block;height:100%;background:var(--teal);border-radius:6px}
+.chart-wrap{position:relative}
+.chart-val{font-size:12px;fill:var(--muted)}
+.tooltip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;
+padding:8px 10px;border-radius:8px;white-space:pre;z-index:3}
+.tooltip[hidden]{display:none}
+.chart-x{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:12px;color:var(--muted);margin-top:2px}
+.chart-legend{display:flex;gap:16px;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.chart-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px}
+.side-col{padding:16px;position:sticky;top:70px}
+.mock-box{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px}
+.mock-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.demo-badge{font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+border:1px solid #D0D5DD;color:#5b6678;background:#F9FAFB;border-radius:6px;padding:2px 8px;white-space:nowrap}
+.mock-stat{font-size:13px;margin:8px 0 6px}
+.mock-stat b{font-size:15px}
+.msg-item{border-top:1px solid var(--line);padding:8px 2px}
+.mi-meta{font-size:12px}
+.mi-text{font-size:13px;margin-top:2px}
+.acct-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:18px}
+.acct-row .block{margin-bottom:0}
+.mock-card{padding:14px 16px;display:flex;flex-direction:column}
+.acct-cells{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:10px;margin-top:10px}
+.acct-cell b{font-size:15px;display:block}
+.acct-cell span{font-size:12px;display:block}
+.mock-meaning{font-size:12.5px;margin-top:8px;flex:1}
+.mock-period{font-size:12px;margin-top:8px}
+.ukrnet-text{font-size:13px;margin-top:6px;flex:1}
+.next-cta{text-align:right;margin:6px 4px 0}
+.next-cta a{text-decoration:none;font-weight:600;display:inline-block;padding:6px 2px}
+/* ---- systems map (desktop SVG) ---- */
+#sysmap .cluster rect{fill:var(--bg);stroke:var(--line)}
+#sysmap .cl-title{font-size:11px;font-weight:600;letter-spacing:.8px;fill:#475467}
+#sysmap .sysbox rect{fill:var(--card);stroke:#D0D5DD}
+#sysmap .sysbox.live rect{stroke:var(--teal-ink);stroke-width:1.5}
+#sysmap .sysbox rect.lvpill{fill:var(--teal-ink);stroke:none}
+#sysmap .sysname{font-size:13.5px;font-weight:600;fill:var(--ink)}
+#sysmap .systype{font-size:10.5px;fill:var(--muted)}
+#sysmap .dot{fill:#98A2B3}
+#sysmap .dot.live{fill:var(--teal-ink)}
+#sysmap .stepmark{font-size:11px;font-weight:700;fill:var(--teal-ink)}
+#sysmap .lvpill{fill:var(--teal-ink)}
+#sysmap .lvtext{font-size:8.5px;font-weight:700;letter-spacing:.5px;fill:#fff}
+#sysmap .flow2{fill:none;stroke:var(--muted);stroke-width:2}
+#sysmap .flow2.live{stroke:var(--teal-ink);stroke-width:2.5}
+#sysmap .livelabel{font-size:10px;font-weight:600;fill:var(--teal-ink)}
+#sysmap .hub rect{fill:var(--card);stroke:var(--teal-ink);stroke-width:1.5}
+#sysmap .hub-kicker{font-size:10px;font-weight:700;letter-spacing:.8px;fill:var(--teal-ink)}
+#sysmap .hub-line{font-size:13.5px;font-weight:600;fill:var(--ink)}
+#sysmap .hub-sub{font-size:10.5px;fill:var(--muted)}
+#sysmap .path-title{font-size:11px;font-weight:600;letter-spacing:.8px;fill:#475467}
+#sysmap .steppill{fill:var(--teal-soft)}
+#sysmap .pstep{font-size:12.5px;font-weight:600;fill:var(--teal-ink)}
+#sysmap .stepsys{font-size:10px;fill:#475467}
+.jbadge{box-sizing:border-box;width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+text-align:center;background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:8px;
+padding:2px 6px;font:600 10px/1.25 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--amber-ink)}
+.map-legend{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;margin:0 0 10px;
+font-size:12px;line-height:1.35;color:var(--muted)}
+.map-legend .lgd{display:inline-flex;align-items:center;gap:6px}
+.lgd-step{color:var(--teal-ink);font-weight:700;font-size:13px}
+.map-conclusion{color:var(--muted);font-size:13.5px;border-top:1px solid var(--line);padding-top:12px}
+.map-terminal h2{margin-bottom:6px}
+.map-terminal p{margin:0;font-size:13.5px;color:var(--muted)}
+/* ---- systems map (mobile: vertical hub + rail) ---- */
+.map-mobile{display:none}
+.mm-hub{background:var(--card);border:1.5px solid var(--teal-ink);border-radius:14px;
+box-shadow:0 2px 6px rgba(11,117,104,.20);padding:14px 16px;margin-bottom:14px}
+.mm-hub-kicker{font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--teal-ink)}
+.mm-hub-title{font-size:14px;font-weight:600;margin-top:6px}
+.mm-hub-sub{font-size:10.5px;margin-top:4px}
+.mm-rail{position:relative;padding-left:20px}
+.mm-rail::before{content:"";position:absolute;left:5px;top:-12px;bottom:24px;width:2px;background:var(--muted)}
+.mm-rail::after{content:"";position:absolute;left:0;top:-14px;border-left:6px solid transparent;
+border-right:6px solid transparent;border-bottom:9px solid var(--muted)}
+.mm-domain{position:relative;border:1px solid var(--line);background:var(--bg);border-radius:14px;
+padding:12px;margin-bottom:14px}
+.mm-domain::before{content:"";position:absolute;left:-18px;top:22px;width:14px;height:2px;background:var(--muted)}
+.mm-domain::after{content:"";position:absolute;left:-19px;top:19px;width:6px;height:6px;border:2px solid var(--muted);
+background:var(--bg);border-radius:50%}
+.mm-title{font-size:11px;font-weight:600;letter-spacing:.8px;color:#475467;margin-bottom:8px}
+.mm-boxes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mm-box{position:relative;background:var(--card);border:1px solid #D0D5DD;border-radius:10px;
+padding:8px 10px;box-shadow:var(--shadow)}
+.mm-box b{display:block;font-size:13px}
+.mm-box .mm-type{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+.mm-box.live{border:1.5px solid var(--teal-ink)}
+.mm-live{position:absolute;top:6px;right:6px;font-style:normal;font-size:8.5px;font-weight:700;
+letter-spacing:.5px;background:var(--teal-ink);color:#fff;border-radius:8px;padding:1px 6px;text-transform:uppercase}
+.mm-dot{position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:#98A2B3}
+.mm-stepmark{position:absolute;bottom:6px;right:8px;font-style:normal;font-size:11px;font-weight:700;color:var(--teal-ink)}
+.mm-path{margin:16px 2px 12px}
+.mm-ptitle{font-size:11px;font-weight:600;letter-spacing:.8px;color:#475467;margin-bottom:8px}
+.mm-step{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--teal-soft);
+border-radius:18px;padding:8px 14px;margin-top:8px;font-size:12.5px;font-weight:600;color:var(--teal-ink)}
+.mm-step .mm-sys{font-size:10px;font-weight:400;color:#475467}
+.mm-junction{background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:8px;
+padding:6px 10px;margin:8px 0 0 16px;font-size:10px;font-weight:600;color:var(--amber-ink)}
+@media (max-width:700px){#sysmap{display:none}.map-mobile{display:block}}
+/* ---- live mail ---- */
+.live-mail{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg)}
+.lm-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lm-badge{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+border:1px solid var(--muted);color:var(--muted);border-radius:8px;padding:2px 8px}
+.live-mail[data-live-state="live"] .lm-badge{background:#D1FADF;border-color:var(--up);color:#054F31}
+.lm-cta{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0 8px}
+.lm-cta-label{font-size:12.5px}
+.lm-cta-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap}
+.lm-addr{font-size:15px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:3px 8px;
+display:inline-block;max-width:100%;overflow-wrap:normal;word-break:keep-all}
+.lm-copy{border:1px solid var(--teal-ink);background:var(--teal-ink);color:#fff;font:600 12.5px/1 inherit;
+font-family:inherit;border-radius:8px;padding:8px 12px;cursor:pointer}
+.lm-copy:hover{box-shadow:var(--shadow-hover)}
+.lm-cta-note{font-size:12px;margin-top:6px}
+.lm-reveal{font:600 13px/1.2 inherit;color:var(--teal);background:var(--teal-soft);border:1px solid var(--teal);border-radius:8px;padding:6px 14px;cursor:pointer}
+.lm-disposable{font-size:12px}
+.lm-guard{font-size:12px;color:var(--muted);background:#F9FAFB;border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0}
+.lm-item{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:8px;cursor:pointer}
+.lm-item:hover{box-shadow:var(--shadow-hover)}
+.lm-item-open{background:var(--card);border-color:#D0D5DD}
+.lm-item-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.lm-item-meta .lm-read-badge{margin-left:auto}
+.lm-read-badge{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:999px;padding:1px 8px}
+.lm-st-new{background:var(--teal-soft);color:var(--teal-ink)}
+.lm-st-read{background:#eef1f5;color:#5b6678}
+.lm-subj{font-size:15px;font-weight:600;margin-top:3px;overflow-wrap:anywhere;display:-webkit-box;
+-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lm-snippet{font-size:13px;margin-top:2px;overflow-wrap:anywhere;word-break:break-word;display:-webkit-box;
+-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lm-full{font-size:12.5px;margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere}
+.lm-more{display:block;width:100%;margin-top:8px;border:1px solid var(--line);background:var(--card);
+color:var(--teal-ink);font:600 12.5px/1 inherit;font-family:inherit;border-radius:8px;padding:9px 10px;cursor:pointer}
+.lm-more[hidden]{display:none}
+.lm-empty{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding:8px 2px}
+.lm-footer{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12.5px;margin:8px 0 0}
+.lm-footer [data-lm-hint]{color:var(--teal-ink)}
+.lm-fresh{font-size:12px}
+.lm-hidden-note{font-size:12px;margin:6px 0 0}
+.lm-honesty{font-size:12px;margin:8px 0 0}
+@media (max-width:1100px){.kpi-row{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:900px){
+.sc-grid{grid-template-columns:1fr}
+/* single-column layout: containers become transparent (display:contents), blocks turn
+   into sc-grid items with explicit order — the live Gmail bridge goes right after KPIs */
+.sc-main,.side-col{display:contents}
+.sc-main .block,.side-col .live-mail,.side-col .mock-box{margin:0}
+[data-block="kpi"]{order:1}
+[data-block="live-mail"]{order:2}
+[data-block="funnel"]{order:3}
+[data-block="branches"]{order:4}
+[data-block="payments7d"]{order:5}
+.acct-row{order:6;margin:0;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+[data-block="viber"]{order:7}
+[data-block="telegram"]{order:8}
+.br-row{grid-template-columns:1fr;gap:6px}
+.br-bar{max-width:220px}
+}
+@media (max-width:640px){
+.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kpi-value{font-size:22px}
+.chart-val{display:none}
+.fn-row{flex-direction:column}
+.chart-x span{display:none}
+.chart-x span:nth-child(1),.chart-x span:nth-child(4),.chart-x span:nth-child(7){display:inline;font-size:12px}
+.chart-x span:nth-child(1){grid-column:1}
+.chart-x span:nth-child(4){grid-column:4}
+.chart-x span:nth-child(7){grid-column:7}
+.top{flex-wrap:wrap;gap:8px 10px;padding:8px 12px}
+.brand{order:1}
+.langs{order:2;margin-left:auto}
+.langs button{padding:11px 14px}
+.tabs{order:3;flex-basis:100%;gap:6px}
+.tabs button{flex:1;text-align:center;padding:11px 6px}
+main{padding:14px 12px 50px}
+.sc-head{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="brand-chip" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M3 12h4l2.5-6 4 12 2.5-6h5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span data-i18n="brand.clinic">Family Med Center</span></div>
+  <nav class="tabs"><button type="button" data-tab="map" data-i18n="nav.map">Systems map</button><button type="button" data-tab="showcase" data-i18n="nav.showcase" class="active">Dashboard</button></nav>
+  <div class="langs"><button type="button" data-lang="en" class="active">EN</button><button type="button" data-lang="ru">RU</button></div>
+</header>
+<main>
+
+<section data-screen="showcase">
+  <div class="sc-head card">
+    <div>
+      <h1 data-i18n="showcase.header.title">Family Med Center — owner's dashboard</h1>
+      <div class="sc-date"><span data-i18n="showcase.header.today">Today</span> · <span data-i18n="_date.today">July 6, 2026</span></div>
+    </div>
+    <select data-branch-select data-i18n-aria="showcase.branch_aria" aria-label="Branch">
+      <option value="all" data-i18n="branches.all">All branches</option>
+      <option value="central" data-i18n="branches.central.short">Central</option>
+      <option value="north" data-i18n="branches.north.short">North</option>
+      <option value="west" data-i18n="branches.west.short">West</option>
+    </select>
+  </div>
+  <div class="src-note" data-block="sources-note">
+    <span data-i18n="showcase.sources_note.text">KPI, funnel, comparison and chart are fed by 5 systems: MIS · Binotel · KeyCRM · OTP Business · Excel.</span>
+    <a href="#map" data-goto="map" data-i18n="showcase.sources_note.link">All 12 systems — on the Map</a>
+    <span class="sn-demo" data-i18n="showcase.sources_note.demo">All dashboard numbers are synthetic demo data; the only live feed is the mail bridge.</span>
+  </div>
+  <div class="sc-grid">
+    <div class="sc-main">
+      <div class="card block" data-block="kpi">
+        <div class="kpi-row">
+<div class="kpi-card" data-kpi="calls">
+  <div class="kpi-label" data-i18n="showcase.kpi.calls">Calls</div>
+  <div class="kpi-value nowrap" data-value="216" data-part="value">216</div>
+  
+  <div class="kpi-delta up" data-delta="155" data-part="delta">▲ 155
+    <span class="muted" data-i18n="showcase.kpi.delta_vs_yesterday">vs yesterday</span></div>
+  <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" aria-hidden="true"><polyline data-part="spark" points="3.0,6.7 22.0,7.9 41.0,5.3 60.0,3.0 79.0,21.1 98.0,31.0 117.0,9.1"/></svg>
+  <div class="spark-label" data-i18n="showcase.kpi.last7">7 days</div>
+</div>
+<div class="kpi-card" data-kpi="missed">
+  <div class="kpi-label" data-i18n="showcase.kpi.missed">Missed</div>
+  <div class="kpi-value nowrap" data-value="33" data-part="value">33</div>
+  
+  <div class="kpi-delta alarm" data-delta="29" data-part="delta">▲ 29
+    <span class="muted" data-i18n="showcase.kpi.delta_vs_yesterday">vs yesterday</span></div>
+  <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" aria-hidden="true"><polyline data-part="spark" points="3.0,10.7 22.0,15.6 41.0,8.8 60.0,6.9 79.0,23.3 98.0,31.0 117.0,3.0"/></svg>
+  <div class="spark-label" data-i18n="showcase.kpi.last7">7 days</div>
+</div>
+<div class="kpi-card" data-kpi="leads">
+  <div class="kpi-label" data-i18n="showcase.kpi.leads">New leads</div>
+  <div class="kpi-value nowrap" data-value="87" data-part="value">87</div>
+  
+  <div class="kpi-delta up" data-delta="64" data-part="delta">▲ 64
+    <span class="muted" data-i18n="showcase.kpi.delta_vs_yesterday">vs yesterday</span></div>
+  <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" aria-hidden="true"><polyline data-part="spark" points="3.0,6.7 22.0,8.7 41.0,5.0 60.0,3.0 79.0,21.0 98.0,31.0 117.0,9.7"/></svg>
+  <div class="spark-label" data-i18n="showcase.kpi.last7">7 days</div>
+</div>
+<div class="kpi-card" data-kpi="appointments">
+  <div class="kpi-label" data-i18n="showcase.kpi.appointments">Bookings</div>
+  <div class="kpi-value nowrap" data-value="61" data-part="value">61</div>
+  
+  <div class="kpi-delta up" data-delta="44" data-part="delta">▲ 44
+    <span class="muted" data-i18n="showcase.kpi.delta_vs_yesterday">vs yesterday</span></div>
+  <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" aria-hidden="true"><polyline data-part="spark" points="3.0,7.1 22.0,9.4 41.0,5.8 60.0,3.0 79.0,21.8 98.0,31.0 117.0,10.8"/></svg>
+  <div class="spark-label" data-i18n="showcase.kpi.last7">7 days</div>
+</div>
+<div class="kpi-card" data-kpi="visits">
+  <div class="kpi-label" data-i18n="showcase.kpi.visits">Visits</div>
+  <div class="kpi-value nowrap" data-value="48" data-part="value">48</div>
+  
+  <div class="kpi-delta up" data-delta="34" data-part="delta">▲ 34
+    <span class="muted" data-i18n="showcase.kpi.delta_vs_yesterday">vs yesterday</span></div>
+  <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" aria-hidden="true"><polyline data-part="spark" points="3.0,7.1 22.0,8.7 41.0,6.1 60.0,3.0 79.0,21.1 98.0,31.0 117.0,13.4"/></svg>
+  <div class="spark-label" data-i18n="showcase.kpi.last7">7 days</div>
+</div>
+<div class="kpi-card" data-kpi="payments">
+  <div class="kpi-label" data-i18n="showcase.kpi.payments">Payments</div>
+  <div class="kpi-value nowrap" data-value="38390" data-part="value">₴ 38,390</div>
+  <div class="kpi-sub"><span data-value="43" data-part="count">43</span> <span data-part="count-word">payments</span></div>
+  <div class="kpi-delta up" data-delta="27660" data-part="delta">▲ 27,660
+    <span class="muted" data-i18n="showcase.kpi.delta_vs_yesterday">vs yesterday</span></div>
+  <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" aria-hidden="true"><polyline data-part="spark" points="3.0,7.8 22.0,9.9 41.0,5.9 60.0,3.0 79.0,22.1 98.0,31.0 117.0,14.6"/></svg>
+  <div class="spark-label" data-i18n="showcase.kpi.last7">7 days</div>
+</div></div>
+        <div class="freshness" data-freshness data-i18n="_fresh.kpi">demo · updated today 2:32 PM · MIS: yesterday 6:00 PM</div>
+      </div>
+      <div class="card block" data-block="funnel">
+        <h2 data-i18n="showcase.funnel.title">Today's funnel</h2>
+        <div class="fn-row">
+  <div class="fn-step" data-funnel-step="calls">
+    <div class="fn-label" data-i18n="showcase.kpi.calls">Calls</div>
+    <div class="fn-value" data-value="216" data-part="value">216</div>
+    <div class="fn-bar"><i data-part="bar" style="width:100%"></i></div>
+    
+  </div>
+  <div class="fn-step" data-funnel-step="leads">
+    <div class="fn-label" data-i18n="showcase.kpi.leads">New leads</div>
+    <div class="fn-value" data-value="87" data-part="value">87</div>
+    <div class="fn-bar"><i data-part="bar" style="width:40%"></i></div>
+    <div class="fn-conv" data-part="conv"><span data-part="conv-val">40%</span> <span class="muted" data-i18n="showcase.funnel.conversion">conversion</span></div>
+  </div>
+  <div class="fn-step" data-funnel-step="appointments">
+    <div class="fn-label" data-i18n="showcase.kpi.appointments">Bookings</div>
+    <div class="fn-value" data-value="61" data-part="value">61</div>
+    <div class="fn-bar"><i data-part="bar" style="width:28%"></i></div>
+    <div class="fn-conv" data-part="conv"><span data-part="conv-val">70%</span> <span class="muted" data-i18n="showcase.funnel.conversion">conversion</span></div>
+  </div>
+  <div class="fn-step" data-funnel-step="visits">
+    <div class="fn-label" data-i18n="showcase.kpi.visits">Visits</div>
+    <div class="fn-value" data-value="48" data-part="value">48</div>
+    <div class="fn-bar"><i data-part="bar" style="width:22%"></i></div>
+    <div class="fn-conv" data-part="conv"><span data-part="conv-val">79%</span> <span class="muted" data-i18n="showcase.funnel.conversion">conversion</span></div>
+  </div></div>
+        <div class="freshness" data-freshness data-i18n="_fresh.funnel">demo · updated today 2:32 PM · MIS: yesterday 6:00 PM</div>
+      </div>
+      <div class="card block" data-block="branches">
+        <h2 data-i18n="showcase.comparison.title">Branch comparison</h2>
+        
+<div class="br-row" data-branch-row="central">
+  <div class="br-name" data-i18n="branches.central.full">Central branch</div>
+  <div class="br-cells"><div class="br-cell best"><b class="nowrap" data-value="96" data-money="0">96</b>
+  <span class="muted" data-i18n="showcase.kpi.calls">Calls</span></div><div class="br-cell best"><b class="nowrap" data-value="27" data-money="0">27</b>
+  <span class="muted" data-i18n="showcase.kpi.appointments">Bookings</span></div><div class="br-cell best"><b class="nowrap" data-value="21" data-money="0">21</b>
+  <span class="muted" data-i18n="showcase.kpi.visits">Visits</span></div><div class="br-cell best"><b class="nowrap" data-value="17860" data-money="1">₴ 17,860</b>
+  <span class="muted" data-i18n="showcase.kpi.payments">Payments</span></div></div>
+  <div class="br-bar"><i style="width:100%"></i></div>
+</div>
+<div class="br-row" data-branch-row="north">
+  <div class="br-name" data-i18n="branches.north.full">North branch</div>
+  <div class="br-cells"><div class="br-cell"><b class="nowrap" data-value="68" data-money="0">68</b>
+  <span class="muted" data-i18n="showcase.kpi.calls">Calls</span></div><div class="br-cell"><b class="nowrap" data-value="19" data-money="0">19</b>
+  <span class="muted" data-i18n="showcase.kpi.appointments">Bookings</span></div><div class="br-cell"><b class="nowrap" data-value="15" data-money="0">15</b>
+  <span class="muted" data-i18n="showcase.kpi.visits">Visits</span></div><div class="br-cell"><b class="nowrap" data-value="11390" data-money="1">₴ 11,390</b>
+  <span class="muted" data-i18n="showcase.kpi.payments">Payments</span></div></div>
+  <div class="br-bar"><i style="width:64%"></i></div>
+</div>
+<div class="br-row" data-branch-row="west">
+  <div class="br-name" data-i18n="branches.west.full">West branch</div>
+  <div class="br-cells"><div class="br-cell"><b class="nowrap" data-value="52" data-money="0">52</b>
+  <span class="muted" data-i18n="showcase.kpi.calls">Calls</span></div><div class="br-cell"><b class="nowrap" data-value="15" data-money="0">15</b>
+  <span class="muted" data-i18n="showcase.kpi.appointments">Bookings</span></div><div class="br-cell"><b class="nowrap" data-value="12" data-money="0">12</b>
+  <span class="muted" data-i18n="showcase.kpi.visits">Visits</span></div><div class="br-cell"><b class="nowrap" data-value="9140" data-money="1">₴ 9,140</b>
+  <span class="muted" data-i18n="showcase.kpi.payments">Payments</span></div></div>
+  <div class="br-bar"><i style="width:51%"></i></div>
+</div>
+        <div class="freshness" data-freshness data-i18n="_fresh.branches">demo · updated today 2:32 PM · MIS: yesterday 6:00 PM</div>
+      </div>
+      <div class="card block" data-block="payments7d">
+        <h2 data-i18n="showcase.payments7d.title">Payments, 7 days</h2>
+        <div class="chart-wrap"><svg id="pay-chart" viewBox="0 0 640 200" width="100%" aria-hidden="true"></svg>
+          <div class="tooltip" data-tooltip hidden></div></div>
+        <div class="chart-x" id="pay-xlabels"></div>
+        <div class="chart-legend" id="pay-legend"></div>
+        <div class="freshness" data-freshness data-i18n="_fresh.payments7d">demo · updated today 2:27 PM</div>
+      </div>
+      <div class="acct-row">
+<div class="card block mock-card" data-block="onec">
+  <div class="mock-head"><h3 data-i18n="map.systems.onec">1C</h3><span class="demo-badge" data-demo-badge data-i18n="showcase.demo_badge">demo data</span></div>
+  <div class="acct-cells">
+  <div class="acct-cell"><b class="nowrap" data-value="261400" data-mock-money="1">₴ 261,400</b>
+    <span class="muted" data-i18n="showcase.onec_w.revenue">Revenue</span></div>
+  <div class="acct-cell"><b class="nowrap" data-value="184650" data-mock-money="1">₴ 184,650</b>
+    <span class="muted" data-i18n="showcase.onec_w.expenses">Expenses</span></div></div>
+  <div class="mock-meaning muted" data-i18n="showcase.onec_w.meaning">money in and out — at a glance</div>
+  <div class="mock-period muted" data-i18n="showcase.period_month">this month</div>
+</div>
+<div class="card block mock-card" data-block="medok">
+  <div class="mock-head"><h3 data-i18n="map.systems.medok">MeDok</h3><span class="demo-badge" data-demo-badge data-i18n="showcase.demo_badge">demo data</span></div>
+  <div class="acct-cells">
+  <div class="acct-cell"><b data-value="47">47</b>
+    <span class="muted" data-i18n="showcase.medok_w.signed">signed</span></div>
+  <div class="acct-cell"><b data-value="6">6</b>
+    <span class="muted" data-i18n="showcase.medok_w.awaiting">awaiting signature</span></div>
+  <div class="acct-cell"><b data-value="1">1</b>
+    <span class="muted" data-i18n="showcase.medok_w.rejected">rejected</span></div></div>
+  <div class="mock-meaning muted" data-i18n="showcase.medok_w.meaning">are medical documents signed on time</div>
+  <div class="mock-period muted" data-i18n="showcase.period_month">this month</div>
+</div>
+<div class="card block mock-card" data-block="vchasno">
+  <div class="mock-head"><h3 data-i18n="map.systems.vchasno">Vchasno</h3><span class="demo-badge" data-demo-badge data-i18n="showcase.demo_badge">demo data</span></div>
+  <div class="acct-cells">
+  <div class="acct-cell"><b data-value="12">12</b>
+    <span class="muted" data-i18n="showcase.vchasno_w.sent">sent</span></div>
+  <div class="acct-cell"><b data-value="9">9</b>
+    <span class="muted" data-i18n="showcase.vchasno_w.signed">signed by counterparty</span></div>
+  <div class="acct-cell"><b data-value="3">3</b>
+    <span class="muted" data-i18n="showcase.vchasno_w.awaiting">awaiting</span></div></div>
+  <div class="mock-meaning muted" data-i18n="showcase.vchasno_w.meaning">are counterparty documents stuck</div>
+  <div class="mock-period muted" data-i18n="showcase.period_month">this month</div>
+</div>
+<div class="card block mock-card" data-block="ukrnet">
+  <div class="mock-head"><h3 data-i18n="map.systems.ukrnet">Ukr.net</h3><span class="demo-badge" data-demo-badge data-i18n="showcase.demo_badge">demo data</span></div>
+  <div class="ukrnet-text" data-i18n="showcase.ukrnet_w.line">The mail flow is being moved to the corporate mailbox</div>
+  <div class="mock-period muted" data-i18n="showcase.period_month">this month</div>
+</div></div>
+    </div>
+    <aside class="card side-col" data-block="channels">
+      
+<div class="live-mail" data-block="live-mail" data-live-state="connecting">
+  <div class="lm-head">
+    <h3 data-i18n="livemail.title">Live bridge: mail</h3>
+    <span class="lm-badge" data-live-badge data-i18n="livemail.badge_connecting">connecting…</span>
+  </div>
+  <div class="lm-cta">
+    <div class="lm-cta-label" data-i18n="livemail.invite_pre">Send an email from your own mailbox to</div>
+    <div class="lm-cta-row">
+      <button type="button" class="lm-reveal" data-mail-reveal data-i18n="livemail.reveal_address">Reveal address</button>
+      <code class="lm-addr" data-mail-address hidden></code>
+      <button type="button" class="lm-copy" data-copy-address hidden data-i18n="livemail.copy_btn">Copy address</button>
+    </div>
+    <div class="lm-cta-note muted"><span data-i18n="livemail.invite_post">It will appear here within a minute.</span>
+      <span class="lm-disposable">(<span data-i18n="livemail.disposable_note">disposable demo address</span>)</span></div>
+  </div>
+  <div class="lm-guard" data-lm-guard hidden data-i18n="livemail.rate_limited">demo protection: inbound flow is limited, showing the last clean emails</div>
+  <div class="lm-list" data-lm-list></div>
+  <button type="button" class="lm-more" data-lm-more hidden></button>
+  <div class="lm-footer muted"><span data-lm-hint hidden data-i18n="livemail.expand_hint">click a message to read its full text</span>
+    <span class="lm-fresh" data-lm-fresh hidden></span></div>
+  <div class="lm-hidden-note muted" data-lm-hidden hidden><span data-i18n="livemail.hidden_note">demo filter is on — emails hidden: </span><span data-lm-hidden-n></span></div>
+  <p class="lm-honesty muted" data-i18n="livemail.honesty">This is a REAL email — the only live bridge in this preview; the rest of the data is synthetic.</p>
+</div>
+      
+<div class="mock-box" data-block="viber">
+  <div class="mock-head"><h3 data-i18n="map.systems.viber">Viber</h3><span class="demo-badge" data-demo-badge data-i18n="showcase.demo_badge">demo data</span></div>
+  <div class="mock-stat"><span data-i18n="showcase.msgr.incoming_today">Incoming today</span>:
+    <b data-value="14">14</b>
+    <span class="muted">· <span data-i18n="showcase.msgr.unread">unread</span>:
+    <span data-value="3">3</span></span></div>
+  
+<article class="msg-item">
+  <div class="mi-meta"><b data-i18n="showcase.persons.p2">M. S.</b>
+    <span class="muted">· <span data-time="14:07">2:07 PM</span></span></div>
+  <div class="mi-text" data-i18n="showcase.viber_msgs.m1">A question about a pediatrician appointment</div>
+</article>
+<article class="msg-item">
+  <div class="mi-meta"><b data-i18n="showcase.persons.p6">T. R.</b>
+    <span class="muted">· <span data-time="13:34">1:34 PM</span></span></div>
+  <div class="mi-text" data-i18n="showcase.viber_msgs.m2">How much is a therapist consultation?</div>
+</article>
+<article class="msg-item">
+  <div class="mi-meta"><b data-i18n="showcase.persons.p7">S. M.</b>
+    <span class="muted">· <span data-time="12:58">12:58 PM</span></span></div>
+  <div class="mi-text" data-i18n="showcase.viber_msgs.m3">Confirming tomorrow's visit</div>
+</article>
+</div>
+      
+<div class="mock-box" data-block="telegram">
+  <div class="mock-head"><h3 data-i18n="map.systems.telegram">Telegram</h3><span class="demo-badge" data-demo-badge data-i18n="showcase.demo_badge">demo data</span></div>
+  <div class="mock-stat"><span data-i18n="showcase.msgr.incoming_today">Incoming today</span>:
+    <b data-value="9">9</b>
+    <span class="muted">· <span data-i18n="showcase.msgr.unread">unread</span>:
+    <span data-value="2">2</span></span></div>
+  
+<article class="msg-item">
+  <div class="mi-meta"><b data-i18n="showcase.persons.p3">O. V.</b>
+    <span class="muted">· <span data-time="13:52">1:52 PM</span></span></div>
+  <div class="mi-text" data-i18n="showcase.telegram_msgs.m1">Could I move my visit to tomorrow?</div>
+</article>
+<article class="msg-item">
+  <div class="mi-meta"><b data-i18n="showcase.persons.p8">V. B.</b>
+    <span class="muted">· <span data-time="13:11">1:11 PM</span></span></div>
+  <div class="mi-text" data-i18n="showcase.telegram_msgs.m2">Which branch is open on Saturday?</div>
+</article>
+<article class="msg-item">
+  <div class="mi-meta"><b data-i18n="showcase.persons.p9">K. O.</b>
+    <span class="muted">· <span data-time="11:47">11:47 AM</span></span></div>
+  <div class="mi-text" data-i18n="showcase.telegram_msgs.m3">Please book me with a cardiologist</div>
+</article>
+</div>
+    </aside>
+  </div>
+  <div class="next-cta"><a href="#map" data-next-cta data-goto="map" data-i18n="cta.to_map">Next: Systems map →</a></div>
+</section>
+
+<section data-screen="map">
+  <div class="card block">
+    <h1 data-i18n="map.title">12 systems, 4 domains — and one dashboard where they meet</h1>
+    <div class="map-legend"><span class="lgd"><svg width="26" height="10" aria-hidden="true"><line x1="0" y1="5" x2="17" y2="5" stroke="#667085" stroke-width="2"/><path d="M17 1 L26 5 L17 9 z" fill="#667085"/></svg><span data-i18n="map.legend.feeds">feeds the dashboard (demo data)</span></span><span class="lgd"><svg width="26" height="10" aria-hidden="true"><line x1="0" y1="5" x2="17" y2="5" stroke="#0B7568" stroke-width="2"/><path d="M17 1 L26 5 L17 9 z" fill="#0B7568"/></svg><span data-i18n="map.legend.live">live bridge — real emails</span></span><span class="lgd"><svg width="18" height="12" aria-hidden="true"><rect x="0.5" y="0.5" width="17" height="11" rx="4" fill="#FEF0C7" stroke="#FEDF89"/></svg><span data-i18n="map.legend.manual">manual hand-off</span></span><span class="lgd"><span class="lgd-step" aria-hidden="true">①–④</span><span data-i18n="map.legend.steps">patient path — the 5 systems behind the dashboard widgets</span></span><span class="lgd"><svg width="22" height="10" aria-hidden="true"><circle cx="5" cy="5" r="3.5" fill="#98A2B3"/><circle cx="16" cy="5" r="3.5" fill="#0B7568"/></svg><span data-i18n="map.legend.status">status dot: gray — demo, teal — live</span></span></div>
+    
+<svg id="sysmap" viewBox="0 0 980 492" width="100%" role="img">
+  <defs>
+    <filter id="shSys" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.6" flood-color="#101828" flood-opacity="0.12"/>
+    </filter>
+    <filter id="shHub" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0B7568" flood-opacity="0.20"/>
+    </filter>
+    <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="#667085"/>
+    </marker>
+    <marker id="arrTeal" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="#0B7568"/>
+    </marker>
+  </defs>
+  <g class="cluster"><rect x="20" y="30" width="300" height="224" rx="14"></rect><text class="cl-title" x="36" y="60" data-i18n="map.domains.comms">PATIENT COMMUNICATIONS</text></g><g class="cluster"><rect x="20" y="274" width="300" height="120" rx="14"></rect><text class="cl-title" x="36" y="304" data-i18n="map.domains.mis_records">MIS AND BOOKINGS</text></g><g class="cluster"><rect x="660" y="30" width="300" height="120" rx="14"></rect><text class="cl-title" x="676" y="60" data-i18n="map.domains.docs">DOCUMENTS</text></g><g class="cluster"><rect x="660" y="180" width="300" height="190" rx="14"></rect><text class="cl-title" x="676" y="210" data-i18n="map.domains.office">OFFICE AND FINANCE</text></g>
+  <g class="sysbox" data-sys="binotel" filter="url(#shSys)"><rect x="36" y="74" width="128" height="48" rx="10"></rect><text class="sysname" x="48" y="94" data-i18n="map.systems.binotel">Binotel</text><text class="systype" x="48" y="111" data-i18n="map.types.binotel">telephony</text><circle class="dot" cx="152" cy="86" r="3.5"></circle><text class="stepmark" x="154" y="114" text-anchor="end">①</text></g><g class="sysbox live" data-sys="gmail" filter="url(#shSys)"><rect x="172" y="74" width="128" height="48" rx="10"></rect><text class="sysname" x="184" y="94" data-i18n="map.systems.gmail">Gmail</text><text class="systype" x="184" y="111" data-i18n="map.types.gmail">clinic mail</text><rect class="lvpill" x="252" y="80" width="38" height="15" rx="7.5"></rect><text class="lvtext" x="271" y="91" text-anchor="middle" data-i18n="map.live_badge">LIVE</text><circle class="dot live" cx="240" cy="87" r="3.5"></circle></g><g class="sysbox" data-sys="viber" filter="url(#shSys)"><rect x="36" y="132" width="128" height="48" rx="10"></rect><text class="sysname" x="48" y="152" data-i18n="map.systems.viber">Viber</text><text class="systype" x="48" y="169" data-i18n="map.types.viber">messenger</text><circle class="dot" cx="152" cy="144" r="3.5"></circle></g><g class="sysbox" data-sys="telegram" filter="url(#shSys)"><rect x="172" y="132" width="128" height="48" rx="10"></rect><text class="sysname" x="184" y="152" data-i18n="map.systems.telegram">Telegram</text><text class="systype" x="184" y="169" data-i18n="map.types.telegram">messenger</text><circle class="dot" cx="288" cy="144" r="3.5"></circle></g><g class="sysbox" data-sys="ukrnet" filter="url(#shSys)"><rect x="36" y="190" width="128" height="48" rx="10"></rect><text class="sysname" x="48" y="210" data-i18n="map.systems.ukrnet">Ukr.net</text><text class="systype" x="48" y="227" data-i18n="map.types.ukrnet">assistant's mail</text><circle class="dot" cx="152" cy="202" r="3.5"></circle></g><g class="sysbox" data-sys="mis" filter="url(#shSys)"><rect x="36" y="318" width="128" height="48" rx="10"></rect><text class="sysname" x="48" y="338" data-i18n="map.systems.mis">MIS</text><text class="systype" x="48" y="355" data-i18n="map.types.mis">med records, visits</text><circle class="dot" cx="152" cy="330" r="3.5"></circle><text class="stepmark" x="154" y="358" text-anchor="end">③</text></g><g class="sysbox" data-sys="keycrm" filter="url(#shSys)"><rect x="172" y="318" width="128" height="48" rx="10"></rect><text class="sysname" x="184" y="338" data-i18n="map.systems.keycrm">KeyCRM</text><text class="systype" x="184" y="355" data-i18n="map.types.keycrm">bookings and leads</text><circle class="dot" cx="288" cy="330" r="3.5"></circle><text class="stepmark" x="290" y="358" text-anchor="end">②</text></g><g class="sysbox" data-sys="medok" filter="url(#shSys)"><rect x="676" y="74" width="128" height="48" rx="10"></rect><text class="sysname" x="688" y="94" data-i18n="map.systems.medok">MeDok</text><text class="systype" x="688" y="111" data-i18n="map.types.medok">medical documents</text><circle class="dot" cx="792" cy="86" r="3.5"></circle></g><g class="sysbox" data-sys="vchasno" filter="url(#shSys)"><rect x="812" y="74" width="128" height="48" rx="10"></rect><text class="sysname" x="824" y="94" data-i18n="map.systems.vchasno">Vchasno</text><text class="systype" x="824" y="111" data-i18n="map.types.vchasno">e-document flow</text><circle class="dot" cx="928" cy="86" r="3.5"></circle></g><g class="sysbox" data-sys="onec" filter="url(#shSys)"><rect x="676" y="224" width="128" height="48" rx="10"></rect><text class="sysname" x="688" y="244" data-i18n="map.systems.onec">1C</text><text class="systype" x="688" y="261" data-i18n="map.types.onec">accounting</text><circle class="dot" cx="792" cy="236" r="3.5"></circle></g><g class="sysbox" data-sys="otp" filter="url(#shSys)"><rect x="812" y="224" width="128" height="48" rx="10"></rect><text class="sysname" x="824" y="244" data-i18n="map.systems.otp">OTP Business</text><text class="systype" x="824" y="261" data-i18n="map.types.otp">bank</text><circle class="dot" cx="928" cy="236" r="3.5"></circle><text class="stepmark" x="930" y="264" text-anchor="end">④</text></g><g class="sysbox" data-sys="excel" filter="url(#shSys)"><rect x="676" y="282" width="128" height="48" rx="10"></rect><text class="sysname" x="688" y="302" data-i18n="map.systems.excel">Excel</text><text class="systype" x="688" y="319" data-i18n="map.types.excel">checks &amp; reports</text><circle class="dot" cx="792" cy="294" r="3.5"></circle><text class="stepmark" x="794" y="322" text-anchor="end">④</text></g>
+
+  <path class="flow2" d="M320 142 C365 142, 365 170, 388 170" marker-end="url(#arr)"></path>
+  <path class="flow2" d="M320 334 C365 334, 365 230, 388 230" marker-end="url(#arr)"></path>
+  <path class="flow2" d="M660 90 C615 90, 615 170, 592 170" marker-end="url(#arr)"></path>
+  <path class="flow2" d="M660 275 C615 275, 615 230, 592 230" marker-end="url(#arr)"></path>
+
+  <path class="flow2 live" d="M300 98 C380 98, 452 102, 482 130" marker-end="url(#arrTeal)"></path>
+  <circle class="flow-anim" r="4" fill="#0B7568">
+    <animateMotion path="M300 98 C380 98, 452 102, 482 130" dur="2.6s" repeatCount="indefinite"/>
+  </circle>
+  <text class="livelabel" x="356" y="86" data-i18n="map.live_link">live emails</text>
+
+  <g class="hub" filter="url(#shHub)">
+    <rect x="395" y="140" width="190" height="120" rx="14"></rect>
+  </g>
+  <text class="hub-kicker" x="490" y="168" text-anchor="middle" data-i18n="map.hub.kicker">OWNER'S DASHBOARD</text>
+  <text class="hub-line" x="490" y="193" text-anchor="middle" data-i18n="map.hub.line1">All 12 systems —</text>
+  <text class="hub-line" x="490" y="211" text-anchor="middle" data-i18n="map.hub.line2">on one screen</text>
+  <text class="hub-sub" x="490" y="238" text-anchor="middle" data-i18n="map.hub.sub">KPI · funnel · 3 branches · mail</text>
+
+  <text class="path-title" x="20" y="416" data-i18n="map.path.title">PATIENT PATH</text>
+  <rect class="steppill" x="20" y="432" width="112" height="36" rx="18"></rect><text class="pstep" x="76.0" y="455" text-anchor="middle" data-i18n="map.path.s1">① Call / inquiry</text>
+  <text class="stepsys" x="76" y="486" text-anchor="middle" data-i18n="map.systems.binotel">Binotel</text>
+  <foreignObject x="138" y="428" width="146" height="46"><div xmlns="http://www.w3.org/1999/xhtml" class="jbadge" data-i18n="map.junctions.j1">retyped by hand from the phone panel into the CRM</div></foreignObject>
+  <rect class="steppill" x="290" y="432" width="112" height="36" rx="18"></rect><text class="pstep" x="346.0" y="455" text-anchor="middle" data-i18n="map.path.s2">② Booking</text>
+  <text class="stepsys" x="346" y="486" text-anchor="middle" data-i18n="map.systems.keycrm">KeyCRM</text>
+  <foreignObject x="408" y="428" width="146" height="46"><div xmlns="http://www.w3.org/1999/xhtml" class="jbadge" data-i18n="map.junctions.j2">the booking is copied by hand into the MIS</div></foreignObject>
+  <rect class="steppill" x="560" y="432" width="112" height="36" rx="18"></rect><text class="pstep" x="616.0" y="455" text-anchor="middle" data-i18n="map.path.s3">③ Visit</text>
+  <text class="stepsys" x="616" y="486" text-anchor="middle" data-i18n="map.systems.mis">MIS</text>
+  <rect class="steppill" x="678" y="432" width="112" height="36" rx="18"></rect><text class="pstep" x="734.0" y="455" text-anchor="middle" data-i18n="map.path.s4">④ Payment</text>
+  <text class="stepsys" x="734" y="486" text-anchor="middle" data-i18n="map.path.sys4">OTP · Excel</text>
+  <foreignObject x="796" y="428" width="164" height="46"><div xmlns="http://www.w3.org/1999/xhtml" class="jbadge" data-i18n="map.junctions.j3">payments are reconciled by hand in Excel</div></foreignObject>
+</svg>
+    
+<div class="map-mobile">
+  <div class="mm-hub">
+    <div class="mm-hub-kicker" data-i18n="map.hub.kicker">OWNER'S DASHBOARD</div>
+    <div class="mm-hub-title"><span data-i18n="map.hub.line1">All 12 systems —</span> <span data-i18n="map.hub.line2">on one screen</span></div>
+    <div class="mm-hub-sub muted" data-i18n="map.hub.sub">KPI · funnel · 3 branches · mail</div>
+  </div>
+  <div class="mm-rail">
+  <div class="mm-domain"><div class="mm-title" data-i18n="map.domains.comms">PATIENT COMMUNICATIONS</div>
+    <div class="mm-boxes"><span class="mm-box" data-sys="binotel"><b data-i18n="map.systems.binotel">Binotel</b><span class="mm-type" data-i18n="map.types.binotel">telephony</span><i class="mm-dot" aria-hidden="true"></i><em class="mm-stepmark" aria-hidden="true">①</em></span><span class="mm-box live" data-sys="gmail"><b data-i18n="map.systems.gmail">Gmail</b><span class="mm-type" data-i18n="map.types.gmail">clinic mail</span><em class="mm-live" data-i18n="map.live_badge">LIVE</em></span><span class="mm-box" data-sys="viber"><b data-i18n="map.systems.viber">Viber</b><span class="mm-type" data-i18n="map.types.viber">messenger</span><i class="mm-dot" aria-hidden="true"></i></span><span class="mm-box" data-sys="telegram"><b data-i18n="map.systems.telegram">Telegram</b><span class="mm-type" data-i18n="map.types.telegram">messenger</span><i class="mm-dot" aria-hidden="true"></i></span><span class="mm-box" data-sys="ukrnet"><b data-i18n="map.systems.ukrnet">Ukr.net</b><span class="mm-type" data-i18n="map.types.ukrnet">assistant's mail</span><i class="mm-dot" aria-hidden="true"></i></span></div></div>
+  <div class="mm-domain"><div class="mm-title" data-i18n="map.domains.mis_records">MIS AND BOOKINGS</div>
+    <div class="mm-boxes"><span class="mm-box" data-sys="mis"><b data-i18n="map.systems.mis">MIS</b><span class="mm-type" data-i18n="map.types.mis">med records, visits</span><i class="mm-dot" aria-hidden="true"></i><em class="mm-stepmark" aria-hidden="true">③</em></span><span class="mm-box" data-sys="keycrm"><b data-i18n="map.systems.keycrm">KeyCRM</b><span class="mm-type" data-i18n="map.types.keycrm">bookings and leads</span><i class="mm-dot" aria-hidden="true"></i><em class="mm-stepmark" aria-hidden="true">②</em></span></div></div>
+  <div class="mm-domain"><div class="mm-title" data-i18n="map.domains.docs">DOCUMENTS</div>
+    <div class="mm-boxes"><span class="mm-box" data-sys="medok"><b data-i18n="map.systems.medok">MeDok</b><span class="mm-type" data-i18n="map.types.medok">medical documents</span><i class="mm-dot" aria-hidden="true"></i></span><span class="mm-box" data-sys="vchasno"><b data-i18n="map.systems.vchasno">Vchasno</b><span class="mm-type" data-i18n="map.types.vchasno">e-document flow</span><i class="mm-dot" aria-hidden="true"></i></span></div></div>
+  <div class="mm-domain"><div class="mm-title" data-i18n="map.domains.office">OFFICE AND FINANCE</div>
+    <div class="mm-boxes"><span class="mm-box" data-sys="onec"><b data-i18n="map.systems.onec">1C</b><span class="mm-type" data-i18n="map.types.onec">accounting</span><i class="mm-dot" aria-hidden="true"></i></span><span class="mm-box" data-sys="otp"><b data-i18n="map.systems.otp">OTP Business</b><span class="mm-type" data-i18n="map.types.otp">bank</span><i class="mm-dot" aria-hidden="true"></i><em class="mm-stepmark" aria-hidden="true">④</em></span><span class="mm-box" data-sys="excel"><b data-i18n="map.systems.excel">Excel</b><span class="mm-type" data-i18n="map.types.excel">checks &amp; reports</span><i class="mm-dot" aria-hidden="true"></i><em class="mm-stepmark" aria-hidden="true">④</em></span></div></div>
+  </div>
+  <div class="mm-path">
+    <div class="mm-ptitle" data-i18n="map.path.title">PATIENT PATH</div>
+    <div class="mm-step"><span data-i18n="map.path.s1">① Call / inquiry</span><span class="mm-sys" data-i18n="map.systems.binotel">Binotel</span></div><div class="mm-junction" data-i18n="map.junctions.j1">retyped by hand from the phone panel into the CRM</div><div class="mm-step"><span data-i18n="map.path.s2">② Booking</span><span class="mm-sys" data-i18n="map.systems.keycrm">KeyCRM</span></div><div class="mm-junction" data-i18n="map.junctions.j2">the booking is copied by hand into the MIS</div><div class="mm-step"><span data-i18n="map.path.s3">③ Visit</span><span class="mm-sys" data-i18n="map.systems.mis">MIS</span></div><div class="mm-step"><span data-i18n="map.path.s4">④ Payment</span><span class="mm-sys" data-i18n="map.path.sys4">OTP · Excel</span></div><div class="mm-junction" data-i18n="map.junctions.j3">payments are reconciled by hand in Excel</div>
+  </div>
+</div>
+    <p class="map-conclusion" data-i18n="map.conclusion">Every junction is a manual hand-off; the dashboard shows all 12 systems on one screen.</p>
+  </div>
+  <div class="card block map-terminal">
+    <h2 data-i18n="map.terminal.title">The next step</h2>
+    <p data-i18n="map.terminal.text">This preview was assembled from a written spec: a systems audit like this map, then the dashboard. Reply in the thread — we'll map your clinic the same way.</p>
+  </div>
+  <div class="next-cta"><a href="#showcase" data-next-cta data-goto="showcase" data-i18n="cta.to_showcase">Next: Dashboard →</a></div>
+</section>
+</main>
+<script>window.__PRELOAD__ = {"series": {"all": {"calls": [233, 224, 243, 259, 131, 61, 216], "missed": [25, 20, 27, 29, 12, 4, 33], "leads": [96, 90, 101, 107, 53, 23, 87], "appointments": [69, 64, 72, 78, 37, 17, 61], "visits": [60, 57, 62, 68, 33, 14, 48], "payments_uah": [49820, 46270, 53140, 57960, 25760, 10730, 38390], "payments_count": [55, 52, 58, 62, 30, 13, 43]}, "central": {"calls": [102, 98, 107, 114, 58, 29, 96], "missed": [11, 9, 12, 13, 5, 2, 15], "leads": [43, 40, 45, 48, 24, 11, 39], "appointments": [31, 29, 32, 35, 17, 8, 27], "visits": [27, 26, 28, 30, 15, 7, 21], "payments_uah": [23650, 22380, 24940, 27310, 12470, 5240, 17860], "payments_count": [25, 24, 26, 28, 14, 6, 19]}, "north": {"calls": [74, 71, 76, 81, 41, 18, 68], "missed": [8, 6, 8, 9, 4, 1, 10], "leads": [30, 28, 31, 33, 16, 7, 27], "appointments": [22, 20, 22, 24, 11, 5, 19], "visits": [19, 18, 19, 21, 10, 4, 15], "payments_uah": [15230, 14020, 16240, 17530, 7610, 3180, 11390], "payments_count": [17, 16, 18, 19, 9, 4, 13]}, "west": {"calls": [57, 55, 60, 64, 32, 14, 52], "missed": [6, 5, 7, 7, 3, 1, 8], "leads": [23, 22, 25, 26, 13, 5, 21], "appointments": [16, 15, 18, 19, 9, 4, 15], "visits": [14, 13, 15, 17, 8, 3, 12], "payments_uah": [10940, 9870, 11960, 13120, 5680, 2310, 9140], "payments_count": [13, 12, 14, 15, 7, 3, 11]}}, "labels": {"en": ["Jun 30", "Jul 1", "Jul 2", "Jul 3", "Jul 4", "Jul 5", "Jul 6"], "ru": ["30.06", "01.07", "02.07", "03.07", "04.07", "05.07", "06.07"]}, "branches": ["central", "north", "west"], "defaultLang": "en", "langs": {"en": {"meta.title": "Family Med Center — owner's dashboard (preview)", "meta.description": "Working preview of an owner's dashboard for a multi-branch family clinic. All data is synthetic.", "brand.clinic": "Family Med Center", "lang.toggle_en": "EN", "lang.toggle_ru": "RU", "nav.map": "Systems map", "nav.showcase": "Dashboard", "cta.to_showcase": "Next: Dashboard →", "cta.to_map": "Next: Systems map →", "branches.all": "All branches", "branches.central.short": "Central", "branches.central.full": "Central branch", "branches.north.short": "North", "branches.north.full": "North branch", "branches.west.short": "West", "branches.west.full": "West branch", "map.title": "12 systems, 4 domains — and one dashboard where they meet", "map.domains.comms": "PATIENT COMMUNICATIONS", "map.domains.mis_records": "MIS AND BOOKINGS", "map.domains.docs": "DOCUMENTS", "map.domains.office": "OFFICE AND FINANCE", "map.hub.kicker": "OWNER'S DASHBOARD", "map.hub.line1": "All 12 systems —", "map.hub.line2": "on one screen", "map.hub.sub": "KPI · funnel · 3 branches · mail", "map.live_link": "live emails", "map.live_badge": "LIVE", "map.systems.mis": "MIS", "map.systems.binotel": "Binotel", "map.systems.keycrm": "KeyCRM", "map.systems.otp": "OTP Business", "map.systems.excel": "Excel", "map.systems.viber": "Viber", "map.systems.telegram": "Telegram", "map.systems.gmail": "Gmail", "map.systems.onec": "1C", "map.systems.medok": "MeDok", "map.systems.vchasno": "Vchasno", "map.systems.ukrnet": "Ukr.net", "map.types.mis": "med records, visits", "map.types.binotel": "telephony", "map.types.keycrm": "bookings and leads", "map.types.otp": "bank", "map.types.excel": "checks & reports", "map.types.viber": "messenger", "map.types.telegram": "messenger", "map.types.gmail": "clinic mail", "map.types.onec": "accounting", "map.types.medok": "medical documents", "map.types.vchasno": "e-document flow", "map.types.ukrnet": "assistant's mail", "map.path.title": "PATIENT PATH", "map.path.s1": "① Call / inquiry", "map.path.s2": "② Booking", "map.path.s3": "③ Visit", "map.path.s4": "④ Payment", "map.path.sys4": "OTP · Excel", "map.junctions.j1": "retyped by hand from the phone panel into the CRM", "map.junctions.j2": "the booking is copied by hand into the MIS", "map.junctions.j3": "payments are reconciled by hand in Excel", "map.legend.feeds": "feeds the dashboard (demo data)", "map.legend.live": "live bridge — real emails", "map.legend.manual": "manual hand-off", "map.legend.steps": "patient path — the 5 systems behind the dashboard widgets", "map.legend.status": "status dot: gray — demo, teal — live", "map.conclusion": "Every junction is a manual hand-off; the dashboard shows all 12 systems on one screen.", "map.terminal.title": "The next step", "map.terminal.text": "This preview was assembled from a written spec: a systems audit like this map, then the dashboard. Reply in the thread — we'll map your clinic the same way.", "showcase.header.title": "Family Med Center — owner's dashboard", "showcase.header.today": "Today", "showcase.branch_aria": "Branch", "showcase.sources_note.text": "KPI, funnel, comparison and chart are fed by 5 systems: MIS · Binotel · KeyCRM · OTP Business · Excel.", "showcase.sources_note.link": "All 12 systems — on the Map", "showcase.sources_note.demo": "All dashboard numbers are synthetic demo data; the only live feed is the mail bridge.", "showcase.kpi.calls": "Calls", "showcase.kpi.missed": "Missed", "showcase.kpi.leads": "New leads", "showcase.kpi.appointments": "Bookings", "showcase.kpi.visits": "Visits", "showcase.kpi.payments": "Payments", "showcase.kpi.payments_count_one": "payment", "showcase.kpi.payments_count_few": "payments", "showcase.kpi.payments_count_many": "payments", "showcase.kpi.delta_vs_yesterday": "vs yesterday", "showcase.kpi.last7": "7 days", "showcase.funnel.title": "Today's funnel", "showcase.funnel.conversion": "conversion", "showcase.comparison.title": "Branch comparison", "showcase.comparison.best": "best", "showcase.payments7d.title": "Payments, 7 days", "showcase.demo_badge": "demo data", "showcase.period_month": "this month", "showcase.persons.p2": "M. S.", "showcase.persons.p3": "O. V.", "showcase.persons.p6": "T. R.", "showcase.persons.p7": "S. M.", "showcase.persons.p8": "V. B.", "showcase.persons.p9": "K. O.", "showcase.msgr.incoming_today": "Incoming today", "showcase.msgr.unread": "unread", "showcase.viber_msgs.m1": "A question about a pediatrician appointment", "showcase.viber_msgs.m2": "How much is a therapist consultation?", "showcase.viber_msgs.m3": "Confirming tomorrow's visit", "showcase.telegram_msgs.m1": "Could I move my visit to tomorrow?", "showcase.telegram_msgs.m2": "Which branch is open on Saturday?", "showcase.telegram_msgs.m3": "Please book me with a cardiologist", "showcase.onec_w.revenue": "Revenue", "showcase.onec_w.expenses": "Expenses", "showcase.onec_w.meaning": "money in and out — at a glance", "showcase.medok_w.signed": "signed", "showcase.medok_w.awaiting": "awaiting signature", "showcase.medok_w.rejected": "rejected", "showcase.medok_w.meaning": "are medical documents signed on time", "showcase.vchasno_w.sent": "sent", "showcase.vchasno_w.signed": "signed by counterparty", "showcase.vchasno_w.awaiting": "awaiting", "showcase.vchasno_w.meaning": "are counterparty documents stuck", "showcase.ukrnet_w.line": "The mail flow is being moved to the corporate mailbox", "showcase.freshness.demo_tag": "demo", "showcase.freshness.updated_today": "updated today {time}", "showcase.freshness.source_daily": "{source}: yesterday {time}", "livemail.title": "Live bridge: mail", "livemail.badge_live": "live", "livemail.badge_connecting": "connecting…", "livemail.invite_pre": "Send an email from your own mailbox to", "livemail.reveal_address": "Reveal address", "livemail.copy_btn": "Copy address", "livemail.copied": "Copied!", "livemail.read_new": "New", "livemail.read_read": "Read", "livemail.expand_hint": "click a message to read its full text", "livemail.invite_post": "It will appear here within a minute.", "livemail.disposable_note": "disposable demo address", "livemail.fresh": "last email {time} · auto-refresh every ~5 s", "livemail.show_all": "show all {n} emails", "livemail.empty": "No emails in the last 24 hours yet — yours will be the first.", "livemail.hidden_note": "demo filter is on — emails hidden: ", "livemail.rate_limited": "demo protection: inbound flow is limited, showing the last clean emails", "livemail.honesty": "This is a REAL email — the only live bridge in this preview; the rest of the data is synthetic.", "misc.currency": "₴", "misc.money": "₴ {n}", "misc.total": "Total", "misc.month_07": "July", "misc.month_abbr_06": "Jun", "misc.month_abbr_07": "Jul", "_fresh.kpi": "demo · updated today 2:32 PM · MIS: yesterday 6:00 PM", "_fresh.funnel": "demo · updated today 2:32 PM · MIS: yesterday 6:00 PM", "_fresh.branches": "demo · updated today 2:32 PM · MIS: yesterday 6:00 PM", "_fresh.payments7d": "demo · updated today 2:27 PM", "_date.today": "July 6, 2026"}, "ru": {"meta.title": "Семейный медцентр — витрина руководителя (превью)", "meta.description": "Работающее превью витрины руководителя для семейной клиники с филиалами. Все данные синтетические.", "brand.clinic": "Семейный медцентр", "lang.toggle_en": "EN", "lang.toggle_ru": "RU", "nav.map": "Карта систем", "nav.showcase": "Витрина", "cta.to_showcase": "Дальше: Витрина →", "cta.to_map": "Дальше: Карта систем →", "branches.all": "Все филиалы", "branches.central.short": "Центральный", "branches.central.full": "Филиал Центральный", "branches.north.short": "Северный", "branches.north.full": "Филиал Северный", "branches.west.short": "Западный", "branches.west.full": "Филиал Западный", "map.title": "12 систем, 4 домена — и одна витрина, где они сходятся", "map.domains.comms": "СВЯЗЬ С ПАЦИЕНТАМИ", "map.domains.mis_records": "МИС И ЗАПИСИ", "map.domains.docs": "ДОКУМЕНТЫ", "map.domains.office": "ОФИС И ФИНАНСЫ", "map.hub.kicker": "ВИТРИНА РУКОВОДИТЕЛЯ", "map.hub.line1": "Все 12 систем —", "map.hub.line2": "на одном экране", "map.hub.sub": "KPI · воронка · 3 филиала · почта", "map.live_link": "живые письма", "map.live_badge": "LIVE", "map.systems.mis": "МИС", "map.systems.binotel": "Binotel", "map.systems.keycrm": "KeyCRM", "map.systems.otp": "OTP Business", "map.systems.excel": "Excel", "map.systems.viber": "Viber", "map.systems.telegram": "Telegram", "map.systems.gmail": "Gmail", "map.systems.onec": "1С", "map.systems.medok": "MeDok", "map.systems.vchasno": "Вчасно", "map.systems.ukrnet": "Ukr.net", "map.types.mis": "медкарты, приёмы", "map.types.binotel": "телефония", "map.types.keycrm": "записи и лиды", "map.types.otp": "банк", "map.types.excel": "сверки, отчёты", "map.types.viber": "мессенджер", "map.types.telegram": "мессенджер", "map.types.gmail": "почта клиники", "map.types.onec": "бухучёт", "map.types.medok": "мед. документы", "map.types.vchasno": "документооборот", "map.types.ukrnet": "почта помощницы", "map.path.title": "ПУТЬ ПАЦИЕНТА", "map.path.s1": "① Звонок / заявка", "map.path.s2": "② Запись", "map.path.s3": "③ Визит", "map.path.s4": "④ Оплата", "map.path.sys4": "OTP · Excel", "map.junctions.j1": "руками переносят из телефонии в CRM", "map.junctions.j2": "запись руками копируют в МИС", "map.junctions.j3": "оплаты руками сверяют в Excel", "map.legend.feeds": "питает витрину (демо-данные)", "map.legend.live": "живой мост — настоящие письма", "map.legend.manual": "ручной стык", "map.legend.steps": "путь пациента — 5 систем, питающих виджеты витрины", "map.legend.status": "точка статуса: серая — демо, бирюзовая — live", "map.conclusion": "Каждый стык — ручная перекладка; витрина показывает все 12 систем на одном экране.", "map.terminal.title": "Следующий шаг", "map.terminal.text": "Это превью собрано по письменному ТЗ: сначала аудит систем — как эта карта, затем витрина. Ответьте в переписке — разложим вашу клинику так же.", "showcase.header.title": "Семейный медцентр — витрина руководителя", "showcase.header.today": "Сегодня", "showcase.branch_aria": "Филиал", "showcase.sources_note.text": "KPI, воронку, сравнение и график питают 5 систем: МИС · Binotel · KeyCRM · OTP Business · Excel.", "showcase.sources_note.link": "Все 12 систем — на Карте", "showcase.sources_note.demo": "Все цифры витрины — синтетические демо-данные; единственный живой поток — почтовый мост.", "showcase.kpi.calls": "Звонки", "showcase.kpi.missed": "Пропущенные", "showcase.kpi.leads": "Новые лиды", "showcase.kpi.appointments": "Записи", "showcase.kpi.visits": "Визиты", "showcase.kpi.payments": "Оплаты", "showcase.kpi.payments_count_one": "оплата", "showcase.kpi.payments_count_few": "оплаты", "showcase.kpi.payments_count_many": "оплат", "showcase.kpi.delta_vs_yesterday": "к вчерашнему", "showcase.kpi.last7": "7 дней", "showcase.funnel.title": "Воронка дня", "showcase.funnel.conversion": "конверсия", "showcase.comparison.title": "Сравнение филиалов", "showcase.comparison.best": "лучший", "showcase.payments7d.title": "Оплаты, 7 дней", "showcase.demo_badge": "демо-данные", "showcase.period_month": "за месяц", "showcase.persons.p2": "М. С.", "showcase.persons.p3": "О. В.", "showcase.persons.p6": "Т. Р.", "showcase.persons.p7": "С. М.", "showcase.persons.p8": "В. Б.", "showcase.persons.p9": "К. О.", "showcase.msgr.incoming_today": "Входящие сегодня", "showcase.msgr.unread": "непрочитанных", "showcase.viber_msgs.m1": "Вопрос о записи к педиатру", "showcase.viber_msgs.m2": "Сколько стоит консультация терапевта?", "showcase.viber_msgs.m3": "Подтверждаю завтрашний визит", "showcase.telegram_msgs.m1": "Можно перенести запись на завтра?", "showcase.telegram_msgs.m2": "Какой филиал работает в субботу?", "showcase.telegram_msgs.m3": "Запишите меня к кардиологу, пожалуйста", "showcase.onec_w.revenue": "Выручка", "showcase.onec_w.expenses": "Расходы", "showcase.onec_w.meaning": "приход и расход — одним взглядом", "showcase.medok_w.signed": "подписано", "showcase.medok_w.awaiting": "ожидают подписи", "showcase.medok_w.rejected": "отклонено", "showcase.medok_w.meaning": "подписываются ли меддокументы вовремя", "showcase.vchasno_w.sent": "отправлено", "showcase.vchasno_w.signed": "подписано контрагентом", "showcase.vchasno_w.awaiting": "ожидают", "showcase.vchasno_w.meaning": "не застряли ли документы контрагентов", "showcase.ukrnet_w.line": "Почтовый поток переводится на корпоративный ящик", "showcase.freshness.demo_tag": "демо", "showcase.freshness.updated_today": "обновлено сегодня {time}", "showcase.freshness.source_daily": "{source}: вчера {time}", "livemail.title": "Живой мост: почта", "livemail.badge_live": "live", "livemail.badge_connecting": "подключение…", "livemail.invite_pre": "Отправьте письмо со своего ящика на", "livemail.reveal_address": "Показать адрес", "livemail.copy_btn": "Скопировать адрес", "livemail.copied": "Скопировано!", "livemail.read_new": "Новое", "livemail.read_read": "Прочитано", "livemail.expand_hint": "клик по письму — полный текст", "livemail.invite_post": "Оно появится здесь в течение минуты.", "livemail.disposable_note": "одноразовый демо-адрес", "livemail.fresh": "последнее письмо {time} · автообновление ~5 с", "livemail.show_all": "показать все письма ({n})", "livemail.empty": "Писем за последние 24 часа пока нет — ваше будет первым.", "livemail.hidden_note": "фильтр демо скрыл писем: ", "livemail.rate_limited": "защита демо: поток ограничен, показаны последние чистые письма", "livemail.honesty": "Это НАСТОЯЩЕЕ письмо — единственный живой мост превью; остальные данные синтетические.", "misc.currency": "₴", "misc.money": "{n} ₴", "misc.total": "Итого", "misc.month_07": "июля", "misc.month_abbr_06": "06", "misc.month_abbr_07": "07", "_fresh.kpi": "демо · обновлено сегодня 14:32 · МИС: вчера 18:00", "_fresh.funnel": "демо · обновлено сегодня 14:32 · МИС: вчера 18:00", "_fresh.branches": "демо · обновлено сегодня 14:32 · МИС: вчера 18:00", "_fresh.payments7d": "демо · обновлено сегодня 14:27", "_date.today": "6 июля 2026"}}};</script>
+<script>
+(function () {
+  'use strict';
+  var P = window.__PRELOAD__;
+  var METRICS_FUNNEL = ['calls', 'leads', 'appointments', 'visits'];
+  var CHART_COLORS = { central: '#0E9384', north: '#66C6BA', west: '#B8E3DD' };
+  var state = { lang: P.defaultLang, branch: 'all' };
+  var NBSP = ' ';
+
+  function L() { return P.langs[state.lang]; }
+  function fmt(v) {
+    return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, state.lang === 'ru' ? NBSP : ',');
+  }
+  function money(v) { return L()['misc.money'].replace('{n}', fmt(v)); }
+  function clockHM(h, m) {
+    var p = (m < 10 ? '0' : '') + m;
+    if (state.lang === 'ru') return (h < 10 ? '0' : '') + h + ':' + p;
+    return (h % 12 || 12) + ':' + p + NBSP + (h < 12 ? 'AM' : 'PM');
+  }
+  function pluralKey(n) {
+    if (state.lang === 'ru') {
+      if (n % 10 === 1 && n % 100 !== 11) return 'one';
+      if ([2, 3, 4].indexOf(n % 10) >= 0 && [12, 13, 14].indexOf(n % 100) < 0) return 'few';
+      return 'many';
+    }
+    return n === 1 ? 'one' : 'many';
+  }
+  function series(metric) { return P.series[state.branch][metric]; }
+  function todayVal(metric) { var s = series(metric); return s[s.length - 1]; }
+  function yestVal(metric) { var s = series(metric); return s[s.length - 2]; }
+
+  function sparkPoints(vals) {
+    var w = 120, h = 34, pad = 3, lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    var rng = (hi - lo) || 1, pts = [];
+    for (var i = 0; i < vals.length; i++) {
+      var x = pad + i * (w - 2 * pad) / (vals.length - 1);
+      var y = h - pad - (vals[i] - lo) * (h - 2 * pad) / rng;
+      pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+    }
+    return pts.join(' ');
+  }
+
+  function applyStrings() {
+    var dict = L();
+    document.documentElement.lang = state.lang;
+    if (dict['meta.title']) document.title = dict['meta.title'];
+    var md = document.querySelector('meta[name="description"]');
+    if (md && dict['meta.description']) md.setAttribute('content', dict['meta.description']);
+    var nodes = document.querySelectorAll('[data-i18n]');
+    for (var i = 0; i < nodes.length; i++) {
+      var k = nodes[i].getAttribute('data-i18n');
+      if (dict[k] !== undefined) nodes[i].textContent = dict[k];
+    }
+    // attribute channel: data-i18n-aria="<key>" localizes aria-label on toggle
+    var arias = document.querySelectorAll('[data-i18n-aria]');
+    for (var a = 0; a < arias.length; a++) {
+      var ak = arias[a].getAttribute('data-i18n-aria');
+      if (dict[ak] !== undefined) arias[a].setAttribute('aria-label', dict[ak]);
+    }
+    // clock channel: data-time="HH:MM" renders per-locale (24h RU / 12h EN)
+    var times = document.querySelectorAll('[data-time]');
+    for (var t = 0; t < times.length; t++) {
+      var hm = times[t].getAttribute('data-time').split(':');
+      times[t].textContent = clockHM(parseInt(hm[0], 10), parseInt(hm[1], 10));
+    }
+    var btns = document.querySelectorAll('[data-lang]');
+    for (var j = 0; j < btns.length; j++)
+      btns[j].classList.toggle('active', btns[j].getAttribute('data-lang') === state.lang);
+  }
+
+  function renderKpis() {
+    var cards = document.querySelectorAll('[data-block="kpi"] [data-kpi]');
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i], kpi = card.getAttribute('data-kpi');
+      var metric = kpi === 'payments' ? 'payments_uah' : kpi;
+      var v = todayVal(metric), prev = yestVal(metric), diff = v - prev;
+      var valEl = card.querySelector('[data-part="value"]');
+      valEl.setAttribute('data-value', v);
+      valEl.textContent = kpi === 'payments' ? money(v) : fmt(v);
+      if (kpi === 'payments') {
+        var cnt = todayVal('payments_count');
+        var cEl = card.querySelector('[data-part="count"]');
+        cEl.setAttribute('data-value', cnt);
+        cEl.textContent = fmt(cnt);
+        card.querySelector('[data-part="count-word"]').textContent =
+          L()['showcase.kpi.payments_count_' + pluralKey(cnt)];
+      }
+      var dEl = card.querySelector('[data-part="delta"]');
+      dEl.setAttribute('data-delta', Math.abs(diff));
+      var alarm = kpi === 'missed' && diff > 0;
+      dEl.className = 'kpi-delta ' + (alarm ? 'alarm' : (diff >= 0 ? 'up' : 'down'));
+      dEl.innerHTML = '';
+      dEl.appendChild(document.createTextNode((diff >= 0 ? '▲ ' : '▼ ') + fmt(Math.abs(diff)) + ' '));
+      var lbl = document.createElement('span');
+      lbl.className = 'muted';
+      lbl.setAttribute('data-i18n', 'showcase.kpi.delta_vs_yesterday');
+      lbl.textContent = L()['showcase.kpi.delta_vs_yesterday'];
+      dEl.appendChild(lbl);
+      card.querySelector('[data-part="spark"]').setAttribute('points', sparkPoints(series(metric)));
+    }
+  }
+
+  function renderFunnel() {
+    var steps = document.querySelectorAll('[data-funnel-step]');
+    var vals = METRICS_FUNNEL.map(todayVal);
+    for (var i = 0; i < steps.length; i++) {
+      var vEl = steps[i].querySelector('[data-part="value"]');
+      vEl.setAttribute('data-value', vals[i]);
+      vEl.textContent = fmt(vals[i]);
+      steps[i].querySelector('[data-part="bar"]').style.width =
+        Math.round(vals[i] / vals[0] * 100) + '%';
+      var conv = steps[i].querySelector('[data-part="conv-val"]');
+      if (conv) conv.textContent = Math.round(vals[i] / vals[i - 1] * 100) + '%';
+    }
+  }
+
+  function renderBranchRows() {
+    var rows = document.querySelectorAll('[data-branch-row]');
+    for (var i = 0; i < rows.length; i++) {
+      var b = rows[i].getAttribute('data-branch-row');
+      if (state.branch === b) rows[i].setAttribute('data-highlight', 'true');
+      else rows[i].removeAttribute('data-highlight');
+      var cells = rows[i].querySelectorAll('[data-value]');
+      for (var c = 0; c < cells.length; c++) {
+        var v = parseFloat(cells[c].getAttribute('data-value'));
+        var isMoney = cells[c].getAttribute('data-money') === '1';
+        cells[c].textContent = isMoney ? money(v) : fmt(v);
+      }
+    }
+  }
+
+  function renderChart() {
+    var svg = document.getElementById('pay-chart');
+    if (!svg) return;
+    var NS = 'http://www.w3.org/2000/svg';
+    svg.innerHTML = '';
+    var groups = state.branch === 'all' ? P.branches : [state.branch];
+    var totals = P.labels[state.lang].map(function (_, d) {
+      return groups.reduce(function (a, b) { return a + P.series[b].payments_uah[d]; }, 0);
+    });
+    var maxT = Math.max.apply(null, totals) || 1;
+    var W = 640, H = 200, padB = 6, padT = 26, bw = 40, colW = W / 7;
+    for (var d = 0; d < 7; d++) {
+      var x = d * colW + (colW - bw) / 2, y = H - padB;
+      for (var g = 0; g < groups.length; g++) {
+        var v = P.series[groups[g]].payments_uah[d];
+        var h = v / maxT * (H - padB - padT);
+        y -= h;
+        var r = document.createElementNS(NS, 'rect');
+        r.setAttribute('x', x); r.setAttribute('y', y);
+        r.setAttribute('width', bw); r.setAttribute('height', Math.max(h, 1));
+        r.setAttribute('rx', 3);
+        r.setAttribute('fill', CHART_COLORS[groups[g]]);
+        svg.appendChild(r);
+      }
+      // per-column total (exact daily value from fake-data.yaml) — the chart is
+      // readable without hover; tooltip still gives the per-branch split
+      var tv = document.createElementNS(NS, 'text');
+      tv.setAttribute('x', d * colW + colW / 2);
+      tv.setAttribute('y', Math.max(14, y - 7));
+      tv.setAttribute('text-anchor', 'middle');
+      tv.setAttribute('class', 'chart-val');
+      tv.textContent = money(totals[d]);
+      svg.appendChild(tv);
+    }
+    for (var hd = 0; hd < 7; hd++) {
+      var hit = document.createElementNS(NS, 'rect');
+      hit.setAttribute('x', hd * colW); hit.setAttribute('y', 0);
+      hit.setAttribute('width', colW); hit.setAttribute('height', H - padB);
+      hit.setAttribute('fill', 'transparent');
+      hit.setAttribute('data-chart-bar', '');
+      hit.setAttribute('data-day', hd);
+      svg.appendChild(hit);
+    }
+    var xl = document.getElementById('pay-xlabels');
+    xl.innerHTML = '';
+    P.labels[state.lang].forEach(function (lb) {
+      var s = document.createElement('span');
+      s.textContent = lb;
+      xl.appendChild(s);
+    });
+    var legend = document.getElementById('pay-legend');
+    legend.innerHTML = '';
+    groups.forEach(function (b) {
+      var item = document.createElement('span');
+      var sw = document.createElement('i');
+      sw.style.background = CHART_COLORS[b];
+      item.appendChild(sw);
+      var name = document.createElement('span');
+      name.setAttribute('data-i18n', 'branches.' + b + '.short');
+      name.textContent = L()['branches.' + b + '.short'];
+      item.appendChild(name);
+      legend.appendChild(item);
+    });
+    bindTooltip(groups);
+  }
+
+  function bindTooltip(groups) {
+    var tip = document.querySelector('[data-tooltip]');
+    var wrap = document.querySelector('.chart-wrap');
+    var bars = document.querySelectorAll('[data-chart-bar]');
+    function show(e) {
+      var d = +e.currentTarget.getAttribute('data-day');
+      var lines = [P.labels[state.lang][d]];
+      var total = 0;
+      groups.forEach(function (b) {
+        var v = P.series[b].payments_uah[d];
+        total += v;
+        lines.push(L()['branches.' + b + '.short'] + ': ' + money(v));
+      });
+      if (groups.length > 1)
+        lines.push(L()['misc.total'] + ': ' + money(total));
+      tip.textContent = lines.join('\n');
+      tip.hidden = false;
+      var wr = wrap.getBoundingClientRect(), br = e.currentTarget.getBoundingClientRect();
+      tip.style.left = Math.max(0, br.left - wr.left + br.width / 2 - 60) + 'px';
+      tip.style.top = '12px';
+    }
+    function hide() { tip.hidden = true; }
+    for (var i = 0; i < bars.length; i++) {
+      bars[i].addEventListener('mouseenter', show);
+      bars[i].addEventListener('mouseleave', hide);
+    }
+  }
+
+  // ---- live mail bridge: the only live integration, one LOCAL fetch (letters.json) ----
+  // open = expanded cards (keyed by received_at): survives the 5s re-renders;
+  // expanding a card does NOT touch the read status (only real reading in the mailbox does)
+  var mailState = { data: null, live: false, open: {}, expandedList: false, revealed: false };
+  // антискан (ратификация Real PO 06.07): адрес не пишется в DOM до клика Reveal
+  document.addEventListener('click', function (e) {
+    if (e.target.closest && e.target.closest('[data-mail-reveal]')) {
+      mailState.revealed = true;
+      renderLiveMail();
+    }
+  });
+  var mqCompact = window.matchMedia ? window.matchMedia('(max-width: 640px)') : null;
+
+  function lmText(el, key) {
+    el.setAttribute('data-i18n', key);
+    el.textContent = L()[key];
+  }
+
+  function lmTime(iso) {
+    var t = new Date(iso);
+    if (isNaN(t.getTime())) return '';
+    return clockHM(t.getHours(), t.getMinutes());
+  }
+
+  function setMailAddress(el, addr) {
+    // address may wrap ONLY at the @ boundary (visual verify note on #137):
+    // text nodes + <wbr>, never innerHTML (letters.json stays untrusted input)
+    el.textContent = '';
+    var at = addr.indexOf('@');
+    if (at < 0) { el.textContent = addr; return; }
+    el.appendChild(document.createTextNode(addr.slice(0, at + 1)));
+    el.appendChild(document.createElement('wbr'));
+    el.appendChild(document.createTextNode(addr.slice(at + 1)));
+  }
+
+  function renderLiveMail() {
+    var box = document.querySelector('[data-block="live-mail"]');
+    if (!box) return;
+    var d = mailState.data;
+    box.setAttribute('data-live-state', mailState.live ? 'live' : 'connecting');
+    lmText(box.querySelector('[data-live-badge]'),
+      mailState.live ? 'livemail.badge_live' : 'livemail.badge_connecting');
+    var addrEl = box.querySelector('[data-mail-address]');
+    setMailAddress(addrEl, mailState.revealed ? ((d && d.address) ? d.address : '…') : '');
+    addrEl.hidden = !mailState.revealed;
+    box.querySelector('[data-mail-reveal]').hidden = !!mailState.revealed;
+    box.querySelector('[data-copy-address]').hidden = !mailState.revealed;
+    box.querySelector('[data-lm-guard]').hidden = !(d && d.status === 'rate_limited');
+    var list = box.querySelector('[data-lm-list]');
+    list.innerHTML = '';
+    // spec v1.2: only clean letters get slots; hidden ones are just counted
+    var letters = ((d && d.letters) || []).filter(function (m) { return !m.hidden; }).slice(0, 3);
+    if (mailState.live && !letters.length) {
+      var em = document.createElement('div');
+      em.className = 'lm-empty';
+      lmText(em, 'livemail.empty');
+      list.appendChild(em);
+    }
+    // compact feed on narrow screens: CTA + 2 latest letters, the rest on tap
+    var compact = mqCompact && mqCompact.matches && !mailState.expandedList;
+    var shown = compact ? letters.slice(0, 2) : letters;
+    // letters are untrusted input: text nodes only, never innerHTML
+    shown.forEach(function (m) {
+      var key = m.received_at || '';
+      var isOpen = !!mailState.open[key];
+      var it = document.createElement('article');
+      it.className = 'lm-item' + (isOpen ? ' lm-item-open' : '');
+      it.setAttribute('data-mail-card', '');
+      it.setAttribute('data-mail-read', m.read ? 'true' : 'false');
+      var meta = document.createElement('div');
+      meta.className = 'lm-item-meta';
+      meta.textContent = lmTime(m.received_at) + ' · ' + (m.from_masked || '');
+      var st = document.createElement('span');
+      st.className = 'lm-read-badge ' + (m.read ? 'lm-st-read' : 'lm-st-new');
+      lmText(st, m.read ? 'livemail.read_read' : 'livemail.read_new');
+      meta.appendChild(st);
+      it.appendChild(meta);
+      var subj = document.createElement('div');
+      subj.className = 'lm-subj';
+      subj.textContent = m.subject || '';
+      it.appendChild(subj);
+      if (isOpen) {
+        var full = document.createElement('div');
+        full.className = 'lm-full';
+        full.setAttribute('data-mail-full', '');
+        full.textContent = m.body_full || m.snippet || '';
+        it.appendChild(full);
+      } else {
+        var sn = document.createElement('div');
+        sn.className = 'lm-snippet muted';
+        sn.textContent = m.snippet || '';
+        it.appendChild(sn);
+      }
+      it.addEventListener('click', function () {
+        if (mailState.open[key]) { delete mailState.open[key]; } else { mailState.open[key] = true; }
+        renderLiveMail();
+      });
+      list.appendChild(it);
+    });
+    var more = box.querySelector('[data-lm-more]');
+    if (compact && letters.length > shown.length) {
+      more.hidden = false;
+      more.textContent = L()['livemail.show_all'].replace('{n}', letters.length);
+    } else {
+      more.hidden = true;
+    }
+    // one expand hint for the whole widget (footer), not a line per card
+    var hint = box.querySelector('[data-lm-hint]');
+    hint.hidden = !shown.length;
+    // freshness of the live feed: newest letter time + refetch cadence
+    var freshEl = box.querySelector('[data-lm-fresh]');
+    if (mailState.live && letters.length) {
+      var newest = letters.reduce(function (a, m) {
+        return (m.received_at || '') > a ? m.received_at : a;
+      }, letters[0].received_at || '');
+      freshEl.textContent = L()['livemail.fresh'].replace('{time}', lmTime(newest));
+      freshEl.hidden = false;
+    } else {
+      freshEl.hidden = true;
+    }
+    var note = box.querySelector('[data-lm-hidden]');
+    var hiddenN = (d && d.hidden_count) || 0;
+    note.hidden = !hiddenN;
+    note.querySelector('[data-lm-hidden-n]').textContent = hiddenN;
+  }
+
+  function pollMail() {
+    if (typeof fetch !== 'function') return;
+    fetch('letters.json?_=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (j) { mailState.data = j; mailState.live = true; renderLiveMail(); })
+      .catch(function () { mailState.live = false; renderLiveMail(); });
+  }
+
+  function copyText(text, done) {
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) { /* ignore: still show feedback */ }
+      document.body.removeChild(ta);
+      done();
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText)
+      navigator.clipboard.writeText(text).then(done, fallback);
+    else fallback();
+  }
+
+  function renderMockMoney() {
+    // 1C mock money: locale-dependent format on lang switch
+    var els = document.querySelectorAll('[data-mock-money]');
+    for (var i = 0; i < els.length; i++) {
+      var v = parseFloat(els[i].getAttribute('data-value'));
+      els[i].textContent = money(v);
+    }
+  }
+
+  function renderData() {
+    renderKpis();
+    renderFunnel();
+    renderBranchRows();
+    renderChart();
+    renderMockMoney();
+    renderLiveMail();
+  }
+
+  function activate(tab, pushHash) {
+    var screens = document.querySelectorAll('[data-screen]');
+    for (var i = 0; i < screens.length; i++)
+      screens[i].classList.toggle('active', screens[i].getAttribute('data-screen') === tab);
+    var btns = document.querySelectorAll('[data-tab]');
+    for (var j = 0; j < btns.length; j++)
+      btns[j].classList.toggle('active', btns[j].getAttribute('data-tab') === tab);
+    if (pushHash !== false && location.hash !== '#' + tab) location.hash = tab;
+    window.scrollTo(0, 0);
+  }
+
+  function setLang(lg) {
+    if (!P.langs[lg]) return;
+    state.lang = lg;
+    try { localStorage.setItem('lang', lg); } catch (e) { /* file:// */ }
+    applyStrings();
+    renderData();
+  }
+
+  function boot() {
+    var q = new URLSearchParams(location.search).get('lang');
+    var stored = null;
+    try { stored = localStorage.getItem('lang'); } catch (e) { /* file:// */ }
+    if (q && P.langs[q]) state.lang = q;
+    else if (stored && P.langs[stored]) state.lang = stored;
+    var tab = (location.hash || '').replace('#', '');
+    activate(['map', 'showcase'].indexOf(tab) >= 0 ? tab : 'showcase', false);
+
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest ? e.target.closest('[data-tab],[data-goto],[data-lang]') : null;
+      if (!el) return;
+      if (el.hasAttribute('data-tab')) activate(el.getAttribute('data-tab'));
+      else if (el.hasAttribute('data-goto')) { e.preventDefault(); activate(el.getAttribute('data-goto')); }
+      else if (el.hasAttribute('data-lang')) setLang(el.getAttribute('data-lang'));
+    });
+    var sel = document.querySelector('[data-branch-select]');
+    sel.addEventListener('change', function () { state.branch = sel.value; renderData(); });
+    window.addEventListener('hashchange', function () {
+      var t = location.hash.replace('#', '');
+      if (['map', 'showcase'].indexOf(t) >= 0) activate(t, false);
+    });
+    var copyBtn = document.querySelector('[data-copy-address]');
+    if (copyBtn) copyBtn.addEventListener('click', function () {
+      var addr = (mailState.data && mailState.data.address)
+        || document.querySelector('[data-mail-address]').textContent;
+      copyText(addr, function () {
+        copyBtn.textContent = L()['livemail.copied'];
+        setTimeout(function () { copyBtn.textContent = L()['livemail.copy_btn']; }, 1600);
+      });
+    });
+    var moreBtn = document.querySelector('[data-lm-more]');
+    if (moreBtn) moreBtn.addEventListener('click', function () {
+      mailState.expandedList = true;
+      renderLiveMail();
+    });
+    if (mqCompact && mqCompact.addEventListener)
+      mqCompact.addEventListener('change', function () { renderLiveMail(); });
+    // reduced motion: drop the SMIL dot on the live edge (CSS can't pause SMIL)
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      var anims = document.querySelectorAll('.flow-anim');
+      for (var i = 0; i < anims.length; i++) anims[i].parentNode.removeChild(anims[i]);
+    }
+
+    applyStrings();
+    renderData();
+    pollMail();
+    setInterval(pollMail, 5000);  // v3: bridge latency is seconds (IDLE daemon + frequent local refetch)
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
