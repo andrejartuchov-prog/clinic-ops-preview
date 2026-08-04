@@ -845,7 +845,7 @@ main{padding:14px 12px 50px}
   // open = expanded cards (keyed by received_at): survives the 5s re-renders;
   // expanding a card does NOT touch the read status (only real reading in the mailbox does)
   var mailState = { data: null, live: false, open: {}, expandedList: false, revealed: false };
-  // антискан (ратификация Real PO 06.07): адрес не пишется в DOM до клика Reveal
+  // anti-scrape: the address is not written to the DOM until Reveal is clicked
   document.addEventListener('click', function (e) {
     if (e.target.closest && e.target.closest('[data-mail-reveal]')) {
       mailState.revealed = true;
